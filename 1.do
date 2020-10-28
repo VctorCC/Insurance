@@ -69,7 +69,7 @@ estimates store model1
 esttab model1 using Annex\01.tex, se ar2 keep(age age2 coll hs famsize married ///
 agecoll agecoll2 agehs agehs2 _cons) replace tex ///
 mtitle("ln(wage/hour)") ///
-title(Fixed Effects regression with year dummies\label{reg01})
+title(Fixed Effects Regression with Year dummies\label{reg01})
 
 * predicted income
 predict hat_ln_wage
