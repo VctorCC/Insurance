@@ -74,7 +74,7 @@ title(Fixed Effects Regression with Year dummies\label{reg01})
 * predicted income
 predict hat_ln_wage
 
-scatter hat_ln_wage age, title(Predicted Income over Age) yti(predicted ln wage) ///
+scatter hat_ln_wage age, title(Predicted Hourly Income over Age) yti(predicted ln wage) ///
 xti(age)
 graph export Annex\predicted_income.png, replace
 
@@ -84,9 +84,10 @@ reg hat_ln_wage age age2 married
 estimates store model2
 
 predict sm_inc
-scatter sm_inc age, title(Smoothed Age Earnings profile) yti(predicted ln wage) ///
+scatter sm_inc age, title(Smoothed Age Hourly Earnings profile) yti(predicted ln wage) ///
 xti(age)
 graph export Annex\smoothed.png, replace
+
 * correlation between hours and age
 reg Hrs_hh age
 estimates store model3
