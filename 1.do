@@ -2,6 +2,14 @@
 * Estimation of income process - Problem set 6
 *-------------------------------------------------------------------------------
 
+/*
+     HOW TO USE THID .DO FILE:
+	 
+     - set your working directory in line 20
+	 - in your directory there has to be PANEL6812_HH.dta
+	 - in your directory create a folder called "Annex" (every export will be saved there)
+*/
+
 clear 
 set more off
 cls
@@ -9,8 +17,8 @@ cls
 * Set up the data --------------------------------------------------------------
 
 * load data
-use "C:\Users\USUARIO\Desktop\Master\2º Año\Social Insurance\Projects\P4\PANEL6812_HH.dta" 
-
+cd "C:\Users\lollo\Documents\uni\QEM\[3] Barcelona_Autonoma\Academics Barcelona\Social  insurance\project 6\STATA" 
+use PANEL6812_HH.dta
 
 * declare panel 
 xtset persnr year
@@ -54,35 +62,55 @@ gen ln_wage = log(hourly_income)
 *==========================================
 * first stage estimates ----------------------------------------------------------------------------
 
-xtreg ln_wage age age2 coll hs famsize married /*
-               */ agecoll agecoll2 agehs agehs2 i.year, fe cluster(persnr)
-
+xtreg ln_wage age age2 coll hs famsize married ///
+agecoll agecoll2 agehs agehs2 i.year, fe cluster(persnr)
 estimates store model1
 
-
+esttab model1 using Annex\01.tex, se ar2 keep(age age2 coll hs famsize married ///
+agecoll agecoll2 agehs agehs2 _cons) replace tex ///
+mtitle("ln(wage/hour)") ///
+title(Fixed Effects Regression with Year dummies\label{reg01})
 
 * predicted income
 predict hat_ln_wage
 
-scatter hat_ln_wage age
+scatter hat_ln_wage age, title(Predicted Hourly Income over Age) yti(predicted ln wage) ///
+xti(age)
+graph export Annex\predicted_income.png, replace
 
 *==================================================
 * smoothed age earnings profile
 reg hat_ln_wage age age2 married
+estimates store model2
+
 predict sm_inc
-scatter sm_inc age
+scatter sm_inc age, title(Smoothed Age Hourly Earnings profile) yti(predicted ln wage) ///
+xti(age)
+graph export Annex\smoothed.png, replace
+
 * correlation between hours and age
 reg Hrs_hh age
+estimates store model3
+
 predict hat_hours
-scatter hat_hours age
+scatter hat_hours age, title(Correlation Hours Wage) yti(predicted hours) ///
+xti(age)
+graph export Annex\corr_hours_age.png, replace
+
+*export model2 and model3
+esttab model2 using Annex\02.tex, se ar2 replace tex ///
+mtitle("predicted ln(wage/hour)") ///
+title(Smoothed Age Earnings profile\label{reg02})
+
+esttab model3 using Annex\03.tex, se ar2 replace tex ///
+mtitle("predicted hours worked by HH") ///
+title(Correaltion between Hours and Age\label{reg03})
+
 
 * residual income
 gen res_ln_wage = ln_wage - hat_ln_wage
 
 summarize res_ln_wage , d
-
-* save data 
-
 		   
 * second stage estimates -----------------------------------------------------------------
 
@@ -120,11 +148,14 @@ collapse (mean) m00_1 m10_1 m01_1 m02_1 [w=fwgt], by(age year)
 		winitial(identity) from(rho 0.9 var_z 0.3 var_nu 0.03 var_epsi 0.03) onestep nolog
 
 mat rt_1 = e(b) 
-	eststo gmm1
+	eststo gmm
 	gen rho=_b[/rho]
 	gen var_nu=_b[/var_nu]
 	gen var_epsi = _b[/var_epsi] 
 	gen Var_Ytilda=  var_nu/(1-(rho)^2) + var_epsi
 
-
-
+*Exporting the table
+	esttab using Annex/gmm.tex, se ar2 replace tex ///
+	mtitle("Variance") ///
+	title(GMM estimates unconditional variance \label{gmm})
+	eststo clear
